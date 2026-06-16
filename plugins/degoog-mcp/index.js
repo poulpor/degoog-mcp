@@ -45,23 +45,18 @@ const SEARCH_TIMEOUT = 15_000;
 const HEARTBEAT_INTERVAL = 30_000;
 
 const _search = async (args) => {
-  const { query, page, time, type, lang, max_results } = args;
-  
+  const { query, page, time, type, lang, maxResults: requestedMax } = args;
+
   if (!query || !query.trim()) {
     return [{ type: "text", text: "Please provide a search query." }];
   }
-  const rawMaxResults = Number(max_results);
-  const safeMaxResults = Number.isFinite(rawMaxResults)
-    ? Math.max(1, Math.min(rawMaxResults, 20))
-    : 5;
-  
+
   const params = new URLSearchParams({ q: query.trim() });
   if (page != null) params.set("page", String(page));
   if (time) params.set("time", time);
   if (type) params.set("type", type);
   if (lang) params.set("lang", lang);
-  params.set("max_results", String(safeMaxResults));
-  
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT);
 
@@ -75,11 +70,23 @@ const _search = async (args) => {
     }
 
     const data = await res.json();
-    const results = data.results || data;
+    let results = data.results || data;
 
     if (!Array.isArray(results) || results.length === 0) {
       return [{ type: "text", text: "No results found." }];
     }
+
+    // --- LOGIC: SORT BY SCORE AND LIMIT RESULTS ---
+    // 1. Determine the limit (default: 3, max: 20)
+    let limit = requestedMax !== undefined && requestedMax !== null ? Number(requestedMax) : 3;
+    limit = Math.min(Math.max(Math.round(limit), 1), 20);
+
+    // 2. Sort results by score in descending order
+    results.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+    // 3. Slice the array to keep only the top N results
+    results = results.slice(0, limit);
+    // ---------------------------------------------
 
     const lines = results.map((r) => {
       const title = r.title || "Untitled";
