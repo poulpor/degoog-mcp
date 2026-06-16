@@ -45,18 +45,23 @@ const SEARCH_TIMEOUT = 15_000;
 const HEARTBEAT_INTERVAL = 30_000;
 
 const _search = async (args) => {
-  const { query, page, time, type, lang } = args;
-
+  const { query, page, time, type, lang, max_results } = args;
+  
   if (!query || !query.trim()) {
     return [{ type: "text", text: "Please provide a search query." }];
   }
-
+  const rawMaxResults = Number(max_results);
+  const safeMaxResults = Number.isFinite(rawMaxResults)
+    ? Math.max(1, Math.min(rawMaxResults, 20))
+    : 5;
+  
   const params = new URLSearchParams({ q: query.trim() });
   if (page != null) params.set("page", String(page));
   if (time) params.set("time", time);
   if (type) params.set("type", type);
   if (lang) params.set("lang", lang);
-
+  params.set("max_results", String(safeMaxResults));
+  
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), SEARCH_TIMEOUT);
 
