@@ -8,7 +8,7 @@ export const TOOL_SCHEMA = {
     properties: {
       query: { type: "string", description: "Search query (required)" },
       page: { type: "number", description: "Page number (default: 1)" },
-      max_results: { type: "number", description: "Maximum number of results to return (default: 5, max: 20)"},
+      max_results: { type: "number", description: "Maximum number of results to return (default: 5, max: 20)" },
       time: {
         type: "string",
         description: "Time range filter: any, hour, day, week, month, year, custom",
