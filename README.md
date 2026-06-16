@@ -9,6 +9,12 @@ An [MCP](https://modelcontextprotocol.io) (Model Context Protocol) plugin for [d
 - **Flexible parameters**: `query` (required), `page`, `time` (any/hour/day/week/month/year/custom), `type` (web/images/news/files), `lang` (ISO 639-1)
 - **SSE transport**: Standard MCP Server-Sent Events transport
 
+## Added features 
+- **Smart Result Ranking**: Automatically sorts search results by relevance score.
+- **Customizable Result Count**: 
+  - **AI Controlled**: The AI can specify the number of results via the `maxResults` argument.
+  - **User Configurable**: Set your preferred default limit (from 1 to 50) directly in the plugin settings.
+
 ## Installation
 
 Place the plugin in degoog's `data/plugins/degoog-mcp/` directory:
@@ -49,6 +55,11 @@ http://<degoog-host>:4321/api/plugin/degoog-mcp/mcp
   }
 }
 ```
+## Configuration
+
+Through the plugin settings interface, you can define the default behavior of the server:
+
+    Max Results: Set a global default for the number of results returned in every search (Input field, limit 1-50).
 
 ## How It Works
 
