@@ -34,6 +34,7 @@ http://<degoog-host>:4321/api/plugin/degoog-mcp/mcp
 | `time` | string | no | Time range: `any`, `hour`, `day`, `week`, `month`, `year`, `custom` |
 | `type` | string | no | Search type: `web`, `images`, `news`, `files` |
 | `lang` | string | no | ISO 639-1 language code (e.g. `en`, `de`, `fr`) |
+| `maxResults`| number | no | Number of results to return (Default: 3, Max: 50) |
 
 ### Example (opencode config)
 
