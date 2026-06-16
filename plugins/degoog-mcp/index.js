@@ -27,7 +27,16 @@ const plugin = {
   description: "Model Context Protocol server — exposes degoog search as an MCP tool for AI clients at /api/plugin/stgreenb-degoog-mcp-degoog-mcp/mcp",
   trigger: "_mcp",
   isClientExposed: false,
-  settingsSchema: [],
+  // --- UPDATED SETTINGS SCHEMA: CHANGED TO INPUT FIELD AND INCREASED LIMIT ---
+  settingsSchema: [
+    {
+      key: "maxResults",
+      label: "Max Results",
+      type: "number", // Changed from 'select' to 'number' for direct input
+      default: 5,
+      description: "Enter the number of search results to return (Maximum 50).",
+    },
+  ],
 
   async init() {},
 
@@ -45,7 +54,8 @@ const SEARCH_TIMEOUT = 15_000;
 const HEARTBEAT_INTERVAL = 30_000;
 
 const _search = async (args) => {
-  const { query, page, time, type, lang, maxResults: requestedMax } = args;
+  // We attempt to get maxResults from arguments (passed by AI)
+  let { query, page, time, type, lang, maxResults: requestedMax } = args;
 
   if (!query || !query.trim()) {
     return [{ type: "text", text: "Please provide a search query." }];
@@ -76,17 +86,17 @@ const _search = async (args) => {
       return [{ type: "text", text: "No results found." }];
     }
 
-    // --- LOGIC: SORT BY SCORE AND LIMIT RESULTS ---
-    // 1. Determine the limit (default: 3, max: 20)
+    // --- LOGIC: SORT BY SCORE AND APPLY LIMIT (MAX 50) ---
+    // 1. Determine the limit (default: 3, max: 50)
     let limit = requestedMax !== undefined && requestedMax !== null ? Number(requestedMax) : 3;
-    limit = Math.min(Math.max(Math.round(limit), 1), 20);
+    limit = Math.min(Math.max(Math.round(limit), 1), 50); // Updated max limit to 50
 
-    // 2. Sort results by score in descending order
+    // 2. Sort results by score descending
     results.sort((a, b) => (b.score || 0) - (a.score || 0));
 
     // 3. Slice the array to keep only the top N results
     results = results.slice(0, limit);
-    // ---------------------------------------------
+    // ------------------------------------------------------
 
     const lines = results.map((r) => {
       const title = r.title || "Untitled";
