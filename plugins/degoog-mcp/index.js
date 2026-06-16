@@ -87,8 +87,8 @@ const _search = async (args) => {
     }
 
     // --- LOGIC: SORT BY SCORE AND APPLY LIMIT (MAX 50) ---
-    // 1. Determine the limit (default: 3, max: 50)
-    let limit = requestedMax !== undefined && requestedMax !== null ? Number(requestedMax) : 3;
+    // 1. Determine the limit (default: 5, max: 50)
+    let limit = requestedMax !== undefined && requestedMax !== null ? Number(requestedMax) : 5;
     limit = Math.min(Math.max(Math.round(limit), 1), 50); // Updated max limit to 50
 
     // 2. Sort results by score descending
