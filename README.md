@@ -61,6 +61,14 @@ Through the plugin settings interface, you can define the default behavior of th
 
     Max Results: Set a global default for the number of results returned in every search (Input field, limit 1-50).
 
+## Architecture
+
+The server follows the MCP specification:
+
+    SSE Transport: Handles persistent connections for real-time updates.
+    RPC Handler: Processes JSON-RPC messages for tool discovery (tools/list) and tool execution (tools/call).
+    Middleware: Includes an integrated safety layer that sorts results by score and enforces the maxResults constraint.
+
 ## How It Works
 
 1. AI client connects via SSE to the MCP endpoint
