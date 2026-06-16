@@ -22,8 +22,8 @@ export const TOOL_SCHEMA = {
       },
       maxResults: { 
         type: "number", 
-        description: "Maximum number of results to return (default: 8, max: 20)",
-        default: 8 
+        description: "Maximum number of results to return (default: 5, max: 50)",
+        default: 5 
       },
     },
     required: ["query"],
