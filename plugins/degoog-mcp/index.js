@@ -38,7 +38,7 @@ const plugin = {
       label: "Max Search Results",
       type: "text",
       placeholder: "5",
-      description: "Nombre maximal de résultats de recherche à retourner à l'IA.",
+      description: "Maximum number of search results to return to the AI.",
     },
   ],
 
