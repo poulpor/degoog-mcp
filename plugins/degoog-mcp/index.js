@@ -27,7 +27,7 @@ const _disabledResponse = () => new Response(
 
 const plugin = {
   name: "Degoog MCP",
-  description: "Forked version that includes a maxResults option and sorts results by score. The server enforces this, so the AI model cannot choose the number of results. Model Context Protocol server — exposes degoog search as an MCP tool.",
+  description: "Forked version with a maxResults option; results are sorted by score and enforced server-side, so the AI model cannot override the number of results. Model Context Protocol server — exposes degoog search as an MCP tool.",
   trigger: "_mcp",
   isClientExposed: false,
   
