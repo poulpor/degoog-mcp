@@ -8,6 +8,9 @@ const INTERNAL_PORT = process.env.DEGOOG_PORT || 4444;
 const DATA_DIR = join(process.cwd(), "data");
 const SETTINGS_FILE = join(DATA_DIR, "plugin-settings.json");
 
+// --- VARIABLES DE CONFIGURATION GLOBALES ---
+let MAX_RESULTS_SERVER = 5; // Valeur par défaut si rien n'est configuré
+
 const _isDisabled = async () => {
   try {
     const raw = await readFile(SETTINGS_FILE, "utf-8");
@@ -24,26 +27,36 @@ const _disabledResponse = () => new Response(
 
 const plugin = {
   name: "Degoog MCP",
-  description: "Forked version, includes a maxResults option and sorts results by score. Model Context Protocol server — exposes degoog search as an MCP tool for AI clients at /api/plugin/stgreenb-degoog-mcp-degoog-mcp/mcp",
+  description: "Model Context Protocol server — exposes degoog search as an MCP tool.",
   trigger: "_mcp",
   isClientExposed: false,
-  // --- UPDATED SETTINGS SCHEMA: CHANGED TO INPUT FIELD AND INCREASED LIMIT ---
+  
+  // 1. AJOUT DU MENU DANS L'INTERFACE
   settingsSchema: [
     {
-      key: "maxResults",
-      label: "Max Results",
-      type: "number", // Changed from 'select' to 'number' for direct input
-      default: 5,
-      description: "Enter the number of search results to return (Maximum 50).",
+      key: "maxResults", // Clé utilisée pour récupérer la valeur
+      label: "Max Search Results",
+      type: "text",
+      placeholder: "5",
+      description: "Nombre maximal de résultats de recherche à retourner à l'IA.",
     },
   ],
 
-  async init() {},
+  async init() {
+    // Initialisation si nécessaire
+  },
+
+  // 2. RÉCUPÉRATION DE LA VALEUR DU MENU
+  configure(settings) {
+    const n = parseInt(settings.maxResults, 10);
+    // On s'assure que c'est un nombre valide, sinon on prend 5 par défaut
+    MAX_RESULTS_SERVER = Number.isFinite(n) && n > 0 ? n : 5;
+  },
 
   async execute() {
     return {
       title: "Degoog MCP",
-      html: "<p>MCP server running. Connect via SSE.</p>",
+      html: `<p>MCP server running. Max results set to: ${MAX_RESULTS_SERVER}</p>`,
     };
   },
 };
@@ -54,8 +67,7 @@ const SEARCH_TIMEOUT = 15_000;
 const HEARTBEAT_INTERVAL = 30_000;
 
 const _search = async (args) => {
-  // We attempt to get maxResults from arguments (passed by AI)
-  let { query, page, time, type, lang, maxResults: requestedMax } = args;
+  const { query, page, time, type, lang } = args;
 
   if (!query || !query.trim()) {
     return [{ type: "text", text: "Please provide a search query." }];
@@ -86,17 +98,15 @@ const _search = async (args) => {
       return [{ type: "text", text: "No results found." }];
     }
 
-    // --- LOGIC: SORT BY SCORE AND APPLY LIMIT (MAX 50) ---
-    // 1. Determine the limit (default: 5, max: 50)
-    let limit = requestedMax !== undefined && requestedMax !== null ? Number(requestedMax) : 5;
-    limit = Math.min(Math.max(Math.round(limit), 1), 50); // Updated max limit to 50
+    // --- LOGIQUE DE TRI ET LIMITATION VIA LE MENU ---
+    
+    // 1. Tri par score décroissant
+    results = results.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    // 2. Sort results by score descending
-    results.sort((a, b) => (b.score || 0) - (a.score || 0));
+    // 2. Application de la limite définie dans le menu 'configure'
+    results = results.slice(0, MAX_RESULTS_SERVER);
 
-    // 3. Slice the array to keep only the top N results
-    results = results.slice(0, limit);
-    // ------------------------------------------------------
+    // --- FIN DE LA LOGIQUE ---
 
     const lines = results.map((r) => {
       const title = r.title || "Untitled";
