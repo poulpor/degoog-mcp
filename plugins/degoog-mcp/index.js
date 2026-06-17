@@ -1,4 +1,6 @@
 // degoog-mcp plugin: MCP server exposing search tool
+// degoog-mcp plugin: MCP server exposing search tool
+// degoog-mcp plugin: MCP server exposing search tool
 import { sseTransport } from "./sse-transport.js";
 import { handleRequest } from "./mcp-handler.js";
 import { readFile } from "fs/promises";
@@ -8,8 +10,8 @@ const INTERNAL_PORT = process.env.DEGOOG_PORT || 4444;
 const DATA_DIR = join(process.cwd(), "data");
 const SETTINGS_FILE = join(DATA_DIR, "plugin-settings.json");
 
-// --- VARIABLES DE CONFIGURATION GLOBALES ---
-let MAX_RESULTS_SERVER = 5; // Valeur par défaut si rien n'est configuré
+// --- GLOBAL CONFIGURATION VARIABLES ---
+let MAX_RESULTS_SERVER = 5; // Default value if not configured
 
 const _isDisabled = async () => {
   try {
@@ -31,10 +33,9 @@ const plugin = {
   trigger: "_mcp",
   isClientExposed: false,
   
-  // 1. AJOUT DU MENU DANS L'INTERFACE
   settingsSchema: [
     {
-      key: "maxResults", // Clé utilisée pour récupérer la valeur
+      key: "maxResults",
       label: "Max Search Results",
       type: "text",
       placeholder: "5",
@@ -43,13 +44,12 @@ const plugin = {
   ],
 
   async init() {
-    // Initialisation si nécessaire
+    // Initialization logic if needed
   },
 
-  // 2. RÉCUPÉRATION DE LA VALEUR DU MENU
   configure(settings) {
     const n = parseInt(settings.maxResults, 10);
-    // On s'assure que c'est un nombre valide, sinon on prend 5 par défaut
+    // Ensure it is a valid number, otherwise fallback to 5
     MAX_RESULTS_SERVER = Number.isFinite(n) && n > 0 ? n : 5;
   },
 
@@ -98,15 +98,15 @@ const _search = async (args) => {
       return [{ type: "text", text: "No results found." }];
     }
 
-    // --- LOGIQUE DE TRI ET LIMITATION VIA LE MENU ---
+    // --- SORTING AND LIMITING LOGIC ---
     
-    // 1. Tri par score décroissant
+    // 1. Sort results by score descending
     results = results.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    // 2. Application de la limite définie dans le menu 'configure'
+    // 2. Apply the limit defined in the configuration menu
     results = results.slice(0, MAX_RESULTS_SERVER);
 
-    // --- FIN DE LA LOGIQUE ---
+    // --- END OF LOGIC ---
 
     const lines = results.map((r) => {
       const title = r.title || "Untitled";
