@@ -12,8 +12,7 @@ An [MCP](https://modelcontextprotocol.io) (Model Context Protocol) plugin for [d
 ## Added features 
 - **Smart Result Ranking**: Automatically sorts search results by relevance score.
 - **Customizable Result Count**: 
-  - **AI Controlled**: The AI can specify the number of results via the `maxResults` argument.
-  - **User Configurable**: Set your preferred default limit (from 1 to 50) directly in the plugin settings.
+  - **User Configurable**: Set your preferred default limit (from 1 to 100) directly in the plugin settings. Default: 5.
 
 ## Installation
 
@@ -40,7 +39,6 @@ http://<degoog-host>:4321/api/plugin/degoog-mcp/mcp
 | `time` | string | no | Time range: `any`, `hour`, `day`, `week`, `month`, `year`, `custom` |
 | `type` | string | no | Search type: `web`, `images`, `news`, `files` |
 | `lang` | string | no | ISO 639-1 language code (e.g. `en`, `de`, `fr`) |
-| `maxResults`| number | no | Number of results to return (Default: 3, Max: 50) |
 
 ### Example (opencode config)
 
@@ -59,7 +57,7 @@ http://<degoog-host>:4321/api/plugin/degoog-mcp/mcp
 
 Through the plugin settings interface, you can define the default behavior of the server:
 
-    Max Results: Set a global default for the number of results returned in every search (Input field, limit 1-50).
+    Max Results: Set a global default for the number of results returned in every search (Input field, limit 1-100).
 
 ## Architecture
 
