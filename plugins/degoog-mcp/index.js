@@ -8,6 +8,8 @@ const INTERNAL_PORT = process.env.DEGOOG_PORT || 4444;
 const DATA_DIR = join(process.cwd(), "data");
 const SETTINGS_FILE = join(DATA_DIR, "plugin-settings.json");
 
+let maxResults = 5;
+
 const _isDisabled = async () => {
   try {
     const raw = await readFile(SETTINGS_FILE, "utf-8");
@@ -17,24 +19,43 @@ const _isDisabled = async () => {
   }
 };
 
-const _disabledResponse = () => new Response(
-  JSON.stringify({ error: "This plugin is disabled" }),
-  { status: 403, headers: { "Content-Type": "application/json" } },
-);
+const _disabledResponse = () =>
+  new Response(JSON.stringify({ error: "This plugin is disabled" }), {
+    status: 403,
+    headers: { "Content-Type": "application/json" },
+  });
 
 const plugin = {
-  name: "Degoog MCP",
-  description: "Model Context Protocol server — exposes degoog search as an MCP tool for AI clients at /api/plugin/stgreenb-degoog-mcp-degoog-mcp/mcp",
+  name: "Degoog MCP-MaxResults",
+  description:
+    "Forked version with a maxResults option, results are sorted by score and enforced server-side, so the AI model cannot override the number of results. Model Context Protocol server — exposes degoog search as an MCP tool for AI clients at /api/plugin/stgreenb-degoog-mcp-degoog-mcp/mcp",
   trigger: "_mcp",
   isClientExposed: false,
-  settingsSchema: [],
+
+  settingsSchema: [
+    {
+      key: "maxResults",
+      label: "Max results",
+      type: "text",
+      placeholder: "5",
+      description:
+        "Maximum number of search results to return to the AI (best scores first, max 100).",
+    },
+  ],
+
+  configure(settings) {
+    const n = parseInt(settings.maxResults, 10);
+    maxResults = Number.isFinite(n) && n > 0 ? Math.min(100, n) : 5;
+  },
 
   async init() {},
 
   async execute() {
     return {
       title: "Degoog MCP",
-      html: "<p>MCP server running. Connect via SSE.</p>",
+      html: `
+        <p>MCP server running. Connect via SSE.</p>
+      `,
     };
   },
 };
@@ -65,6 +86,7 @@ const _search = async (args) => {
       signal: controller.signal,
     });
     clearTimeout(timeout);
+
     if (!res.ok) {
       return [{ type: "text", text: `Search failed with status ${res.status}` }];
     }
@@ -76,19 +98,27 @@ const _search = async (args) => {
       return [{ type: "text", text: "No results found." }];
     }
 
-    const lines = results.map((r) => {
+    const sortedResults = [...results].sort((a, b) => {
+      const scoreA = Number.isFinite(a?.score) ? a.score : -Infinity;
+      const scoreB = Number.isFinite(b?.score) ? b.score : -Infinity;
+      return scoreB - scoreA;
+    });
+
+    const limitedResults = sortedResults.slice(0, maxResults);
+
+    const lines = limitedResults.map((r) => {
       const title = r.title || "Untitled";
       const url = r.url || "";
-      const snippet = (r.snippet || r.description || "")
-        .replace(/\s+/g, " ")
-        .trim();
+      const snippet = (r.snippet || r.description || "").replace(/\s+/g, " ").trim();
       const sources = r.sources || [];
       const source = r.source || r.engine || "unknown";
       const score = r.score != null ? ` (score: ${r.score})` : "";
-      const sourceLabel = sources.length > 1
-        ? `*Sources: ${sources.join(", ")}*`
-        : `*Source: ${sources.length === 1 ? sources[0] : source}*`;
-      return `- [${title}](${url})${score}\n  ${snippet}\n  ${sourceLabel}`;
+      const sourceLabel =
+        sources.length > 1
+          ? `*Sources: ${sources.join(", ")}*`
+          : `*Source: ${sources.length === 1 ? sources[0] : source}*`;
+
+      return `- [${title}](${url})${score}\n ${snippet}\n ${sourceLabel}`;
     });
 
     let output = lines.join("\n\n");
@@ -100,25 +130,26 @@ const _search = async (args) => {
     return [{ type: "text", text: output }];
   } catch (err) {
     clearTimeout(timeout);
+
     if (err.name === "AbortError") {
       return [{ type: "text", text: "Search timed out. Please try again." }];
     }
+
     return [{ type: "text", text: `Search error: ${err.message}` }];
   }
 };
 
 const handleSSE = async (req) => {
   if (await _isDisabled()) return _disabledResponse();
+
   const url = new URL(req.url);
   const sessionId = crypto.randomUUID();
-
   const { stream, session } = sseTransport.createStream(sessionId, () => {
     clearInterval(session._heartbeat);
   });
 
   const endpointPath = `${url.pathname}?sessionId=${sessionId}`;
   session.send("endpoint", endpointPath);
-
   session._heartbeat = setInterval(() => {
     session.send("heartbeat", {});
   }, HEARTBEAT_INTERVAL);
@@ -134,6 +165,7 @@ const handleSSE = async (req) => {
 
 const handleRPC = async (req) => {
   if (await _isDisabled()) return _disabledResponse();
+
   const url = new URL(req.url);
   const sessionId = url.searchParams.get("sessionId");
   const session = sessionId ? sseTransport.getSession(sessionId) : null;
