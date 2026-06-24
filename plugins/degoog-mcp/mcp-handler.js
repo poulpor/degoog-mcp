@@ -41,7 +41,7 @@ export async function handleRequest(message, searchFn) {
           result: {
             protocolVersion: "2024-11-05",
             capabilities: { tools: {} },
-            serverInfo: { name: "degoog-mcp-stgreenb", version: "0.1.0" },
+            serverInfo: { name: "degoog-mcp-stgreenb", version: "0.1.1" },
           },
         };
 
