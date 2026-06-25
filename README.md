@@ -13,7 +13,7 @@ An [MCP](https://modelcontextprotocol.io) (Model Context Protocol) plugin for [d
 - **Smart Result Ranking**: Automatically sorts search results by relevance score.
 - **Customizable Result Count**: 
   - **User Configurable**: Set your preferred default limit (from 1 to 100) directly in the plugin settings. Default: 5.
-- **Server Rename**: I replaced the server name `mcp-degoog` with `mcp-degoog-stgreenb` because there is now an official MCP server for degoog with the same name. This caused an issue in llama.cpp, as it was impossible to load both servers simultaneously. However, it’s useful to use the `search` tool from this MCP server in conjunction with the `scrape` tool from the official degoog MCP server, since the latter’s `search` tool can sometimes be problematic with certain models.
+- **Server Rename**: I replaced the server name `mcp-degoog` with `mcp-degoog-stgreenb` because there is now an official MCP server for degoog with the same name. This caused an issue in llama.cpp, as it was impossible to load both servers simultaneously. However, it’s useful to use the `search` tool from this MCP server in conjunction with the `scrape` tool from the official degoog MCP server, since the latter’s `search` tool can sometimes be problematic with certain models (I experienced hallucinations with the URLs returned by the tool.)
 ## Installation
 
 Place the plugin in degoog's `data/plugins/degoog-mcp/` directory:
